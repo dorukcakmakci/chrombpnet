@@ -10,13 +10,20 @@ desc = """======================================================================
 def read_parser():
 
         parser = argparse.ArgumentParser(description=desc,formatter_class=RawTextHelpFormatter)
-        subparsers = parser.add_subparsers(help="Must be eithier 'pipeline', 'train', 'qc', 'bias', 'prep', 'pred_bw', 'contribs_bw', 'modisco_motifs' ,'footprints', or 'snp_score'.", required=True, dest='cmd')
+        subparsers = parser.add_subparsers(help="Must be either 'pipeline', 'train', 'qc', 'single_stage_model__train', 'bias', 'prep', 'pred_bw', 'contribs_bw', 'modisco_motifs' ,'footprints', or 'snp_score'.", required=True, dest='cmd')
         
         # main parsers
         
         pipeline_parser = subparsers.add_parser("pipeline", help="End-to-end pipline with train, quality check and test for bias factorized ChromBPNet model")
         train_parser = subparsers.add_parser("train", help="Train bias factorized ChromBPNet model")
         qc_parser = subparsers.add_parser("qc", help="Do quality checks and get test metrics for bias factorized ChromBPNet model")
+
+        # single-stage chrombpnet model parsers
+
+        single_stage_chrombpnet__train_parser = subparsers.add_parser("single_stage_model__train", help="Train single-stage ChromBPNet model")
+        single_stage_short_kernel_chrombpnet__train_parser = subparsers.add_parser("single_stage_short_kernel_model__train", help="Train single-stage short kernel (7bp) ChromBPNet model")
+        single_stage_long_kernel_chrombpnet__train_parser = subparsers.add_parser("single_stage_long_kernel_model__train", help="Train single-stage long kernel (50bp)ChromBPNet model")
+
 
         # bias parsers
         
@@ -50,6 +57,7 @@ def read_parser():
        		group.add_argument('-ibam', '--input-bam-file', type=str, help="Input BAM file")
         	group.add_argument('-ifrag', '--input-fragment-file', type=str, help="Input fragment file")
         	group.add_argument('-itag', '--input-tagalign-file', type=str, help="Input tagAlign file")
+        	group.add_argument('-ibw', '--input-bigwig', type=str, help="Input bigwig file (skips read processing)")
         	required_train.add_argument('-o', '--output-dir', type=str, required=True, help="Output dir (path/to/output/dir)")
         	required_train.add_argument('-d', '--data-type', required=True, type=str, choices=['ATAC', 'DNASE'], help="assay type")
         	required_train.add_argument("-p", "--peaks", type=str, required=True, help="10 column bed file of peaks. Sequences and labels will be extracted centered at start (2nd col) + summit (10th col).")
@@ -156,7 +164,46 @@ def read_parser():
         optional_qc_parser.add_argument("-fp","--file-prefix",type=str,required=False, default=None, help="File prefix for output to use. All the files will be prefixed with this string if provided.")
         optional_qc_parser.add_argument("-bs", "--batch-size", type=int, default=64, help="batch size to use for model training")
         optional_qc_parser.add_argument('-hp', '--html-prefix', required=False, default="./", help="The html prefix to use for the html file output.")
- 
+
+
+        # single stage chrombpnet model train parser arguments
+        single_stage_chrombpnet__train_parser._action_groups.pop()
+        required_single_stage_parser = single_stage_chrombpnet__train_parser.add_argument_group('required arguments')
+        optional_single_stage_parser = single_stage_chrombpnet__train_parser.add_argument_group('optional arguments')
+
+        required_single_stage_parser, optional_single_stage_parser = general_training_args(required_single_stage_parser, optional_single_stage_parser)
+
+        optional_single_stage_parser.add_argument("-sr", "--negative-sampling-ratio", type=float, default=0.1, help="Ratio of negatives to positive samples per epoch")
+        optional_single_stage_parser.add_argument("-fil", "--filters", type=int, default=512, help="Number of filters to use in chrombpnet mode")
+        optional_single_stage_parser.add_argument("-dil", "--n-dilation-layers", type=int, default=8, help="Number of dilation layers to use in chrombpnet model")
+        optional_single_stage_parser.add_argument("-j", "--max-jitter", type=int, default=500, help="Maximum jitter applied on either side of region (default 500 for chrombpnet model)")
+        optional_single_stage_parser.add_argument("-bs", "--batch-size", type=int, default=64, help="batch size to use for model training")
+
+        # single stage short kernel chrombpnet model train parser arguments
+        single_stage_short_kernel_chrombpnet__train_parser._action_groups.pop()
+        required_short_kernel_parser = single_stage_short_kernel_chrombpnet__train_parser.add_argument_group('required arguments')
+        optional_short_kernel_parser = single_stage_short_kernel_chrombpnet__train_parser.add_argument_group('optional arguments')
+
+        required_short_kernel_parser, optional_short_kernel_parser = general_training_args(required_short_kernel_parser, optional_short_kernel_parser)
+
+        optional_short_kernel_parser.add_argument("-sr", "--negative-sampling-ratio", type=float, default=0.1, help="Ratio of negatives to positive samples per epoch")
+        optional_short_kernel_parser.add_argument("-fil", "--filters", type=int, default=512, help="Number of filters to use in chrombpnet mode")
+        optional_short_kernel_parser.add_argument("-dil", "--n-dilation-layers", type=int, default=8, help="Number of dilation layers to use in chrombpnet model")
+        optional_short_kernel_parser.add_argument("-j", "--max-jitter", type=int, default=500, help="Maximum jitter applied on either side of region (default 500 for chrombpnet model)")
+        optional_short_kernel_parser.add_argument("-bs", "--batch-size", type=int, default=64, help="batch size to use for model training")
+
+        # single stage long kernel chrombpnet model train parser arguments
+        single_stage_long_kernel_chrombpnet__train_parser._action_groups.pop()
+        required_long_kernel_parser = single_stage_long_kernel_chrombpnet__train_parser.add_argument_group('required arguments')
+        optional_long_kernel_parser = single_stage_long_kernel_chrombpnet__train_parser.add_argument_group('optional arguments')
+
+        required_long_kernel_parser, optional_long_kernel_parser = general_training_args(required_long_kernel_parser, optional_long_kernel_parser)
+
+        optional_long_kernel_parser.add_argument("-sr", "--negative-sampling-ratio", type=float, default=0.1, help="Ratio of negatives to positive samples per epoch")
+        optional_long_kernel_parser.add_argument("-fil", "--filters", type=int, default=512, help="Number of filters to use in chrombpnet mode")
+        optional_long_kernel_parser.add_argument("-dil", "--n-dilation-layers", type=int, default=8, help="Number of dilation layers to use in chrombpnet model")
+        optional_long_kernel_parser.add_argument("-j", "--max-jitter", type=int, default=500, help="Maximum jitter applied on either side of region (default 500 for chrombpnet model)")
+        optional_long_kernel_parser.add_argument("-bs", "--batch-size", type=int, default=64, help="batch size to use for model training")
 
         # bias model pipeline arguments
 

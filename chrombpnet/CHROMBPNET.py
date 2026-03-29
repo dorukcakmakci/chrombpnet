@@ -21,6 +21,31 @@ def main():
 		os.makedirs(os.path.join(args.output_dir,"evaluation"), exist_ok=False)
 
 		pipelines.chrombpnet_train_pipeline(args)
+
+	elif args.cmd == "single_stage_model__train":
+		os.makedirs(os.path.join(args.output_dir,"logs"), exist_ok=False)
+		os.makedirs(os.path.join(args.output_dir,"auxiliary"), exist_ok=False)
+		os.makedirs(os.path.join(args.output_dir,"models"), exist_ok=False)
+		os.makedirs(os.path.join(args.output_dir,"evaluation"), exist_ok=False)
+
+		pipelines.single_stage_chrombpnet_train_pipeline(args)
+
+	elif args.cmd == "single_stage_short_kernel_model__train":
+		os.makedirs(os.path.join(args.output_dir,"logs"), exist_ok=False)
+		os.makedirs(os.path.join(args.output_dir,"auxiliary"), exist_ok=False)
+		os.makedirs(os.path.join(args.output_dir,"models"), exist_ok=False)
+		os.makedirs(os.path.join(args.output_dir,"evaluation"), exist_ok=False)
+
+		pipelines.single_stage_short_kernel_chrombpnet_train_pipeline(args)
+
+	elif args.cmd == "single_stage_long_kernel_model__train":
+		os.makedirs(os.path.join(args.output_dir,"logs"), exist_ok=False)
+		os.makedirs(os.path.join(args.output_dir,"auxiliary"), exist_ok=False)
+		os.makedirs(os.path.join(args.output_dir,"models"), exist_ok=False)
+		os.makedirs(os.path.join(args.output_dir,"evaluation"), exist_ok=False)
+
+		pipelines.single_stage_long_kernel_chrombpnet_train_pipeline(args)
+
 	
 	elif args.cmd == "qc":
 		os.makedirs(os.path.join(args.output_dir,"auxiliary"), exist_ok=False)
